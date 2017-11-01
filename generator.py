@@ -96,7 +96,28 @@ def change_target_images_table(localmspdir, olddatabase):
     logging.info("Successfully adapted the table \"TargetImages\"")
 
 def change_upgraded_images_table(localmspdir, newdatabase):
-    pass
+    logging.info("Changing content of table \"UpgradedImages\"")
+    filename = os.path.join(localmspdir, "UpgradedImages.idt")
+    if not os.path.exists(filename):
+        raise FileNotFoundError("Could not find %s" % filename)
+
+    with open(filename, "r") as f:
+        file_content = f.read()
+
+    file_list = file_content.split('\n', 4)
+    file_content = "\n".join(file_list[0:3])
+    upgraded = "U1"
+    patchmsipath = ""
+    symbolpath = ""
+    family = "22334455"
+
+    # TODO: moggi: handle the case of an existing line 3
+    logging.warn("Currently ignoring existing content for UpgradedImages: %s" % file_list[3])
+
+    file_content = file_content + "\n%s\t%s\t%s\t%s\t%s\n" % (upgraded, convert_to_absolute_win_path(newdatabase), patchmsipath, symbolpath, family)
+
+    with open(filename, "w") as f:
+        f.write(file_content)
 
 def change_image_families_table(localmspdir):
     pass

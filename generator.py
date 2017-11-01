@@ -119,8 +119,35 @@ def change_upgraded_images_table(localmspdir, newdatabase):
     with open(filename, "w") as f:
         f.write(file_content)
 
+    logging.info("Successfully adapted the table \"UpgradedImages\"")
+
 def change_image_families_table(localmspdir):
-    pass
+    logging.info("Changing content of table \"ImageFamilies\"")
+    filename = os.path.join(localmspdir, "ImageFamilies.idt")
+    if not os.path.exists(filename):
+        raise FileNotFoundError("Could not find %s" % filename)
+
+    with open(filename, "r") as f:
+        file_content = f.read()
+
+    file_list = file_content.split('\n', 4)
+    file_content = "\n".join(file_list[0:3])
+    family = "22334455"
+    media_src_propname = "MediaSrcPropName"
+    media_disk_id = "2"
+    file_sequence_start = "0" # TODO: moggi: this needs to be calculated
+    disk_prompt = ""
+    volume_label = ""
+
+    # TODO: moggi: handle the case of an existing line 3
+    logging.warn("Currently ignoring existing content for ImageFamilies: %s" % file_list[3])
+
+    file_content = file_content + "\n%s\t%s\t%s\t%s\t%s\t%s\n" % (family, media_src_propname, media_disk_id, file_sequence_start, disk_prompt, volume_label)
+
+    with open(filename, "w") as f:
+        f.write(file_content)
+
+    logging.info("Successfully adapted the table \"ImageFamilies\"")
 
 def change_patch_metadata_table(localmspdir):
     pass

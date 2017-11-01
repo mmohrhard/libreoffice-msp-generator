@@ -33,7 +33,7 @@ def check_needed_files_in_path():
 
 def install_msi_file(msi_file):
     logging.info("Installing MSI file: %s" % msi_file)
-    return ""
+    return "some_\\tpath"
 
 def extract_all_tables_from_pcpfile(fullpcpfilename, localmspdir):
     command = ["msidb.exe", "-d", convert_to_absolute_win_path(fullpcpfilename), "-f", convert_to_absolute_win_path(localmspdir), "-e", "*"]
@@ -76,8 +76,24 @@ def change_properties_table(localmspdir, mspfilename):
     with open(filename, "w") as f:
         f.write(file_content)
 
+    logging.info("Successfully adapted the table \"Properties\"")
+
 def change_target_images_table(localmspdir, olddatabase):
-    pass
+    logging.info("Changing content of table \"TargetImages\"")
+    filename = os.path.join(localmspdir, "TargetImages.idt")
+    if not os.path.exists(filename):
+        raise FileNotFoundError("Could not find %s" % filename)
+
+    with open(filename, "r") as f:
+        file_content = f.read()
+
+    file_content = "\n".join(file_content.split('\n', 3)[0:3])
+    file_content = file_content + "\nT1\t%s\t\tU1\t1\t0x00000922\t1\n" % convert_to_absolute_win_path(olddatabase)
+
+    with open(filename, "w") as f:
+        f.write(file_content)
+
+    logging.info("Successfully adapted the table \"TargetImages\"")
 
 def change_upgraded_images_table(localmspdir, newdatabase):
     pass

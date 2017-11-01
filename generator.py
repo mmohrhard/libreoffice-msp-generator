@@ -10,14 +10,20 @@ import logging
 import argparse
 import os
 import tempfile
+import subprocess
 
 from shutil import copyfile
 
 def check_needed_files_in_path():
     logging.info("Checking that all needed executables are in the PATH")
     necessary_executables = ["msidb.exe", "msimsp.exe"]
-    if False:
-        raise FileNotFoundError("")
+    for executable in necessary_executables:
+        try:
+            logging.info("Checking %s" % executable)
+            subprocess.call(executable)
+        except FileNotFoundError:
+            logging.error("The mandatory executable %s could not be found in PATH. Please ensure that the MSI tools are found in the path" % executable)
+            raise
 
 def install_msi_file(msi_file):
     logging.info("Installing MSI file: %s" % msi_file)

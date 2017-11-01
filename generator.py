@@ -51,8 +51,8 @@ def check_and_save_tables(tablelist, localmspdir):
             raise FileNotFoundError("could not find %s" % filename)
         copyfile(filename, filename_save)
 
-def generate_msp_file_name():
-    return ""
+def generate_msp_file_name(localmspdir):
+    return os.path.join(localmspdir, "LibreOffice.msp")
 
 def edit_tables(tablelist, localmspdir, olddatabase, newdatabase, mspfilename):
     pass
@@ -101,7 +101,7 @@ def create_msp_patch(old_msi_file, new_msi_file, sign = False):
     check_and_save_tables(tablelist, localmspdir);
 
     # Setting the name of the new msp file
-    msp_file_name = generate_msp_file_name()
+    msp_file_name = generate_msp_file_name(localmspdir)
 
     # Editing tables
     edit_tables(tablelist, localmspdir, olddatabase, newdatabase, msp_file_name);

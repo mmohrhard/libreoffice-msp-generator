@@ -100,8 +100,8 @@ def create_msp_patch(old_msi_file, new_msi_file, sign = False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Generate MSP files from 2 MSI files")
     parser.add_argument('-l', '--log', default=False, help="Enable printing out the log output", action='store_const', const=True)
-    parser.add_argument('-o', '--old', help="The path to the old MSI file", nargs=1)
-    parser.add_argument('-n', '--new', help="The path to the new MSI file", nargs=1)
+    parser.add_argument('-o', '--old', help="The path to the old MSI file", nargs=1, required=True)
+    parser.add_argument('-n', '--new', help="The path to the new MSI file", nargs=1, required=True)
     parser.add_argument('-s', '--sign', default=False, help="Whether the generated msp file should be signed", action='store_const', const=True)
 
     args = parser.parse_args()

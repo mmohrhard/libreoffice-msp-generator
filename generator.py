@@ -11,6 +11,7 @@ import argparse
 import os
 import tempfile
 import subprocess
+import re
 
 from shutil import copyfile
 
@@ -54,8 +55,49 @@ def check_and_save_tables(tablelist, localmspdir):
 def generate_msp_file_name(localmspdir):
     return os.path.join(localmspdir, "LibreOffice.msp")
 
-def edit_tables(tablelist, localmspdir, olddatabase, newdatabase, mspfilename):
+def get_guid():
+    output = subprocess.check_output("uuidgen.exe").strip().decode("utf-8").upper()
+    return output
+
+def change_properties_table(localmspdir, mspfilename):
+    logging.info("Changing content of table \"Properties.idt\"")
+    filename = os.path.join(localmspdir, "Properties.idt")
+    if not os.path.exists(filename):
+        raise FileNotFoundError("Could not find %s" % filename)
+
+    guid_string = "{" + get_guid() + "}"
+
+    with open(filename, "r") as f:
+        file_content = f.read()
+
+    file_content = re.sub("PatchGUID\t.*", "PatchGUID\t%s" % guid_string, file_content)
+    file_content = re.sub("PatchOutputPath\t.*", "PatchOutputPath\t%s" % convert_to_absolute_win_path(mspfilename).replace("\\t", "\\\\t"), file_content)
+
+    with open(filename, "w") as f:
+        f.write(file_content)
+
+def change_target_images_table(localmspdir, olddatabase):
     pass
+
+def change_upgraded_images_table(localmspdir, newdatabase):
+    pass
+
+def change_image_families_table(localmspdir):
+    pass
+
+def change_patch_metadata_table(localmspdir):
+    pass
+
+def change_patch_sequence_table(localmspdir):
+    pass
+
+def edit_tables(localmspdir, olddatabase, newdatabase, mspfilename):
+    change_properties_table(localmspdir, mspfilename)
+    change_target_images_table(localmspdir, olddatabase)
+    change_upgraded_images_table(localmspdir, newdatabase)
+    change_image_families_table(localmspdir)
+    change_patch_metadata_table(localmspdir)
+    change_patch_sequence_table(localmspdir)
 
 def include_tables_into_pcpfile(fullpcpfilename, localmspdir, tablelist):
     pass
@@ -104,7 +146,7 @@ def create_msp_patch(old_msi_file, new_msi_file, sign = False):
     msp_file_name = generate_msp_file_name(localmspdir)
 
     # Editing tables
-    edit_tables(tablelist, localmspdir, olddatabase, newdatabase, msp_file_name);
+    edit_tables(localmspdir, olddatabase, newdatabase, msp_file_name);
 
     # Adding edited tables into pcp file
     include_tables_into_pcpfile(fullpcpfilename, localmspdir, tablelist);

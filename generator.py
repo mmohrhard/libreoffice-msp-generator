@@ -14,6 +14,11 @@ import subprocess
 
 from shutil import copyfile
 
+def convert_to_absolute_win_path(path):
+    win_path = subprocess.check_output(["cygpath", "-w", path]).strip().decode("utf-8")
+    logging.info("Converted %s to Windows path %s" % (path, win_path))
+    return win_path
+
 def check_needed_files_in_path():
     logging.info("Checking that all needed executables are in the PATH")
     necessary_executables = ["msidb.exe", "msimsp.exe"]
@@ -30,10 +35,21 @@ def install_msi_file(msi_file):
     return ""
 
 def extract_all_tables_from_pcpfile(fullpcpfilename, localmspdir):
-    pass
+    command = ["msidb.exe", "-d", convert_to_absolute_win_path(fullpcpfilename), "-f", convert_to_absolute_win_path(localmspdir), "-e", "*"]
+    try:
+        subprocess.check_call(command)
+    except:
+        logging.error("Could not extract tables from %s with command %s" % (fullpcpfilename, command))
+        raise
 
 def check_and_save_tables(tablelist, localmspdir):
-    pass
+    for table in tablelist:
+        filename = os.path.join(localmspdir, table + ".idt")
+        filename_save = filename + ".sav"
+        if not os.path.exists(filename):
+            logging.error("Could not find mandatory IDT file: %s" % filename)
+            raise FileNotFoundError("could not find %s" % filename)
+        copyfile(filename, filename_save)
 
 def generate_msp_file_name():
     return ""

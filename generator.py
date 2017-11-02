@@ -32,8 +32,15 @@ def check_needed_files_in_path():
             raise
 
 def install_msi_file(msi_file):
-    logging.info("Installing MSI file: %s" % msi_file)
-    return "some_\\tpath"
+    temp_dir = tempfile.mkdtemp(prefix="msp_libreoffice_msi_dir")
+    logging.info("Installing MSI file: %s into %s" % (msi_file, temp_dir))
+    command = ["msiexec.exe", "/a", msi_file, "TARGET_DIR=%s" % convert_to_absolute_win_path(temp_dir), "/qn", "/l*v", "admin_install.log"]
+    try:
+        subprocess.check_call(command)
+    except:
+        logging.error("Could not successfully install %s into %s with command %s. Error log can be found in \"admin_install.log\"" %(msi_file, temp_dir, " ".join(command)))
+        raise
+    return temp_dir
 
 def extract_all_tables_from_pcpfile(fullpcpfilename, localmspdir):
     command = ["msidb.exe", "-d", convert_to_absolute_win_path(fullpcpfilename), "-f", convert_to_absolute_win_path(localmspdir), "-e", "*"]
@@ -236,6 +243,6 @@ if __name__ == '__main__':
     if args.log:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    create_msp_patch(args.old, args.new, args.sign)
+    create_msp_patch(args.old[0], args.new[0], args.sign)
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab: */

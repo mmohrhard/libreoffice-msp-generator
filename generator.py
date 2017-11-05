@@ -277,7 +277,20 @@ def edit_tables(localmspdir, olddatabase, newdatabase, mspfilename):
     change_patch_sequence_table(localmspdir)
 
 def include_tables_into_pcpfile(fullpcpfilename, localmspdir, tablelist):
-    pass
+    for table in tablelist:
+        if len(table) > 8:
+            old_name = os.path.join(localmspdir, table + ".idt")
+            new_name = os.path.join(localmspdir, table[0:8] + ".idt")
+            logging.info("Copying table from old name \"%s\" to \"%s\" to comply with 8+3 naming rules" % (old_name, new_name))
+            copyfile(old_name, new_name)
+
+    for table in tablelist:
+        command = ["msidb.exe", "-d", convert_to_absolute_win_path(fullpcpfilename), "-f", convert_to_absolute_win_path(localmspdir), "-i", table]
+        try:
+            subprocess.check_call(command)
+        except:
+            logging.error("Failed to execute: %s" % ("\n".join(command)))
+            raise
 
 def execute_msimsp(fullpcpfilename, mspfilename, localmspdir):
     pass

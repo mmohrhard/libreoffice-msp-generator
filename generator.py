@@ -236,8 +236,37 @@ def change_patch_metadata_table(localmspdir):
 
     logging.info("Successfully changed content of table \"PatchMetadata\"")
 
+def get_super_sede():
+    service_pack = os.environ.get('LIBO_SERVICEPACK', 'Hotfix')
+    data = {'Hotfix' : '0', 'ServicePack' : '1'}
+    return data[service_pack]
+
 def change_patch_sequence_table(localmspdir):
-    pass
+    logging.info("Changing content of table \"PatchSequence\"")
+    filename = os.path.join(localmspdir, "PatchSequence.idt")
+    if not os.path.exists(filename):
+        raise FileNotFoundError("Could not find %s" % filename)
+
+    with open(filename, "r") as f:
+        file_content = f.read()
+
+    split_file_content = file_content.split("\n", 4)
+    file_content = "\n".join(split_file_content[0:3])
+
+    patch_family = "SO"
+    target = ""
+    patch_sequence = get_patch_sequence()
+    super_sede = get_super_sede()
+    if len(split_file_content) > 3:
+        line = split_file_content[3].split("\n")[0]
+        match = re.match("^\s*(.*?)\t(.*?)\t(.*?)\t(.*?)\s*", line)
+        if match:
+            patch_family = match.groups()[0]
+            target = match.groups()[1]
+
+    file_content = file_content + "\n%s\t%s\t%s\t%s\n" % (patch_family, target, patch_sequence, super_sede)
+    with open(filename, "w") as f:
+        f.write(file_content)
 
 def edit_tables(localmspdir, olddatabase, newdatabase, mspfilename):
     change_properties_table(localmspdir, mspfilename)

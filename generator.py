@@ -12,6 +12,7 @@ import os
 import tempfile
 import subprocess
 import re
+import datetime
 
 from shutil import copyfile
 
@@ -156,8 +157,84 @@ def change_image_families_table(localmspdir):
 
     logging.info("Successfully adapted the table \"ImageFamilies\"")
 
+def get_patch_sequence():
+    package_version = os.environ.get('LIBO_PACKAGEVERSION').strip()
+    match = re.match('(\d+)\.(\d+)\.(\d+)\.(\d+)', package_version) # $major.$minor.$micro.$patch
+    print(match.groups())
+    if len(match.groups()) != 4:
+        raise Exception("The 'LIBO_PACKAGEVERSION' environment variable needs to have the form '$major.$minor.$micro.$patch")
+    return package_version
+
 def change_patch_metadata_table(localmspdir):
-    pass
+    logging.info("Changing content of table \"PatchMetadata\"")
+    filename = os.path.join(localmspdir, "PatchMetadata.idt")
+    if not os.path.exists(filename):
+        raise FileNotFoundError("Could not find %s" % filename)
+
+    with open(filename, "r") as f:
+        file_content = f.read()
+
+    data = {}
+    data['Classification'] = ('', os.environ.get('LIBO_SERVICEPACK', 'Hotfix'))
+    data['AllowRemoval'] = ('', os.environ.get('LIBO_ALLOWREMOVAL', '1'))
+    data['CreationTimeUTC'] = ('', datetime.datetime.utcnow().strftime("%m/%d/%Y %H:%M"))
+
+    if data['Classification'][1] == 'Hotfix':
+        service_pack = False
+    elif data['Classification'][1] == 'ServicePack':
+        service_pack = True
+    else:
+        logging.error("Unknown Classification type: \"%s\"; Only \"Hotfix\" and \"ServicePack\" allowed." % data['Classification'][1])
+        raise Exception("Unknown Classification type: %s" % data['Classification'][1])
+
+    product_name = os.environ.get('LIBO_PRODUCTNAME', 'LibreOffice')
+    product_version = os.environ.get('LIBO_PRODUCTVERSION')
+
+    base = product_name + " " + product_version
+
+    data['TargetProductName'] = ('', product_name)
+    data['ManufacturerName'] = ('', os.environ.get('LIBO_VENDOR', 'LibreOffice'))
+    patch_sequence_value = get_patch_sequence()
+
+    build_id = os.environ.get('LIBO_BUILDID', '123')
+
+    if service_pack:
+        windows_level_value = os.environ.get('LIBO_PATCHLEVEL', '0')
+        name_and_descr = base + " ServicePack " + windows_patch_level + " " + patch_sequence_value + " Build: " + build_id
+        data['DisplayName'] = ('', name_and_descr.strip())
+        data['Description'] = ('', name_and_descr.strip())
+    else:
+        display_addon = os.environ.get('LIBO_PATCH_DISPLAY_ADDON', '')
+        name_and_descr = base + " HotFix " + display_addon + " " + patch_sequence_value + " Build: " + build_id
+        data['DisplayName'] = ('', name_and_descr.strip())
+        data['Description'] = ('', name_and_descr.strip())
+
+    split_file_content = file_content.split("\n", 3)
+
+    for line in split_file_content[3].split("\n"):
+        match = re.match("^\s*(.*?)\t(.*?)\t(.*?)\s*$", line)
+        if match is None:
+            continue
+        if len(match.groups()) != 3:
+            continue
+
+        if match.groups()[1] in data:
+            data[match.groups()[1]] = (match.groups()[0], data[match.groups()[1]][1]) # set the company from the original file
+        else:
+            data[match.groups()[1]] = (match.groups()[0], match.groups()[2])
+
+    with open(filename, "w") as f:
+        f.write(split_file_content[0])
+        f.write("\n")
+        f.write(split_file_content[1])
+        f.write("\n")
+        f.write(split_file_content[2])
+        f.write("\n")
+        for key, value in data.items():
+            line = "%s\t%s\t%s\n" % (value[0], key, value[1])
+            f.write(line)
+
+    logging.info("Successfully changed content of table \"PatchMetadata\"")
 
 def change_patch_sequence_table(localmspdir):
     pass

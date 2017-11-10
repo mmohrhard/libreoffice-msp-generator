@@ -18,7 +18,7 @@ from shutil import copyfile
 
 def convert_to_absolute_win_path(path):
     win_path = subprocess.check_output(["cygpath", "-w", path]).strip().decode("utf-8")
-    logging.info("Converted %s to Windows path %s" % (path, win_path))
+    logging.debug("Converted %s to Windows path %s" % (path, win_path))
     return win_path
 
 def check_needed_files_in_path():

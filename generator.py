@@ -293,7 +293,18 @@ def include_tables_into_pcpfile(fullpcpfilename, localmspdir, tablelist):
             raise
 
 def execute_msimsp(fullpcpfilename, mspfilename, localmspdir):
-    pass
+    logging.info("Creating patch file through msimsp.exe")
+    log_file_name = os.path.join(localmspdir, "msp_log.log")
+
+    command = ["msimsp.exe", "-s", convert_to_absolute_win_path(fullpcpfilename), "-p", convert_to_absolute_win_path(mspfilename), "-l", convert_to_absolute_win_path(log_file_name)]
+
+    try:
+        subprocess.check_call(command)
+    except:
+        logging.error("Unable to execute patch generation with command: %s" % ("\n".join(command)))
+        raise
+
+    logging.info("Successfully created a msp file found at %s" % (mspfilename))
 
 def get_current_dir():
     dir_path = os.path.dirname(os.path.realpath(__file__))

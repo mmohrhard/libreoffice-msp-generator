@@ -25,3 +25,12 @@ Enable the log output. Will print many additional logging messages.
 ### -s / --sign
 
 Whether the generated MSP file should be signed.
+
+## The following environment variables allow to control the MSP generation
+
+* LIBO_SERVICEPACK: Default value: 'Hotfix'; Valid values: 'Hotfix', 'ServicePack'
+* LIBO_ALLOWREMOVAL: Default value: '1'; Valid values: '0', '1'
+* LIBO_PRODUCTNAME: Default value 'LibreOffice'
+* LIBO_VENDOR: Default value 'LibreOffice'
+* LIBO_PATCHLEVEL: Default value '0'; Valid values are non-negative integers
+* LIBO_PACKAGEVERSION: Mandatory parameter with the package version, form $major.$minor.$micro.$patch
